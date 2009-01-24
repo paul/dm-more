@@ -20,6 +20,10 @@ module SQL
     def supports_serial?
       true
     end
+    
+    def create_table_statement(quoted_table_name)
+      "CREATE TABLE #{quoted_table_name} ENGINE = InnoDB CHARACTER SET #{character_set} COLLATE #{collation}"
+    end
 
     # TODO: move to dm-more/dm-migrations
     def property_schema_statement(schema)
