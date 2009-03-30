@@ -11,7 +11,7 @@ module DataMapper
 
       @@default_error_messages = {
         :absent => '%s must be absent',
-        :inclusion => '%s must be one of [%s]',
+        :inclusion => '%s must be one of %s',
         :invalid => '%s has an invalid format',
         :confirmation => '%s does not match the confirmation',
         :accepted  => "%s is not accepted",
@@ -41,6 +41,13 @@ module DataMapper
         @@default_error_messages[key] % [field, *values].flatten
       end
 
+      attr_reader :model
+
+      def initialize(model)
+        @model  = model
+        @errors = {}
+      end
+
       # Clear existing validation errors.
       def clear!
         errors.clear
@@ -49,9 +56,20 @@ module DataMapper
       # Add a validation error. Use the field_name :general if the errors does
       # not apply to a specific field of the Resource.
       #
-      # @param <Symbol> field_name the name of the field that caused the error
-      # @param <String> message    the message to add
+      # @param [Symbol] field_name the name of the field that caused the error
+      # @param [String] message    the message to add
       def add(field_name, message)
+        # see 6abe8fff in extlib, but don't enforce
+        # it unless Edge version is installed
+        if message.respond_to?(:try_call)
+          # DM model
+          message = if model.class.respond_to?(:properties)
+                      message.try_call(model, model.class.properties[field_name])
+                    else
+                      # pure Ruby object
+                      message.try_call(model)
+                    end
+        end
         (errors[field_name] ||= []) << message
       end
 
@@ -64,10 +82,12 @@ module DataMapper
 
       # Return validation errors for a particular field_name.
       #
-      # @param <Symbol> field_name the name of the field you want an error for
+      # @param [Symbol] field_name the name of the field you want an error for
+      # @return [Array<DataMapper::Validate::Error>]
+      #   array of validation errors or empty array, if there are no errors on given field
       def on(field_name)
         errors_for_field = errors[field_name]
-        errors_for_field.blank? ? nil : errors_for_field
+        errors_for_field.blank? ? nil : errors_for_field.uniq
       end
 
       def each
@@ -78,7 +98,7 @@ module DataMapper
       end
 
       def empty?
-        entries.empty?
+        @errors.empty?
       end
 
       def method_missing(meth, *args, &block)
@@ -87,7 +107,7 @@ module DataMapper
 
       private
       def errors
-        @errors ||= {}
+        @errors
       end
 
     end # class ValidationErrors

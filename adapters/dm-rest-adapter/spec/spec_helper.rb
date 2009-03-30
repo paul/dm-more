@@ -1,6 +1,12 @@
 require 'pathname'
 require 'rubygems'
 
+gem 'dm-core', '0.10.0'
+require 'dm-core'
+
+gem 'rspec', '~>1.1.12'
+require 'spec'
+
 ROOT = Pathname(__FILE__).dirname.parent.expand_path
 
 # use local dm-serializer if running from dm-more directly
@@ -9,17 +15,12 @@ $LOAD_PATH.unshift(lib) if lib.directory?
 
 require ROOT + 'lib/rest_adapter'
 
-DataMapper.setup(:default, {
-  :adapter  => 'rest',
-  :format => 'xml',
-  :host => 'localhost',
-  :port => '3001'
-})
+load ROOT + 'config/database.rb.example'
 
 class Book
   include DataMapper::Resource
   property :author,     String
   property :created_at, DateTime
-  property :id,         Integer, :serial => true
+  property :id,         Serial
   property :title,      String
 end
