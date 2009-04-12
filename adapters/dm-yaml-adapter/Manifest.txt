@@ -1,0 +1,10 @@
+.gitignore
+History.txt
+LICENSE
+Manifest.txt
+README.txt
+Rakefile
+lib/yaml_adapter.rb
+spec/yaml_adapter_spec.rb
+spec/spec.opts
+spec/spec_helper.rb
